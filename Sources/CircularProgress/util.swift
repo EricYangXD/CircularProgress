@@ -19,16 +19,47 @@ func with<T>(_ item: T, update: (inout T) throws -> Void) rethrows -> T {
 	return this
 }
 
-
-/// macOS 10.14 polyfill
 extension NSColor {
+	/// macOS 10.14 polyfill
 	static let controlAccentColorPolyfill: NSColor = {
 		if #available(macOS 10.14, *) {
 			return NSColor.controlAccentColor
 		} else {
+			// swiftlint:disable:next object_literal
 			return NSColor(red: 0.10, green: 0.47, blue: 0.98, alpha: 1)
 		}
 	}()
+
+	func with(alpha: Double) -> NSColor {
+		return withAlphaComponent(CGFloat(alpha))
+	}
+
+	typealias HSBAColor = (hue: Double, saturation: Double, brightness: Double, alpha: Double)
+	var hsba: HSBAColor {
+		var hue: CGFloat = 0
+		var saturation: CGFloat = 0
+		var brightness: CGFloat = 0
+		var alpha: CGFloat = 0
+		let color = usingColorSpace(.deviceRGB) ?? self
+		color.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
+		return HSBAColor(Double(hue), Double(saturation), Double(brightness), Double(alpha))
+	}
+
+	/// Adjust color components by ratio.
+	func adjusting(
+		hue: Double = 0,
+		saturation: Double = 0,
+		brightness: Double = 0,
+		alpha: Double = 0
+	) -> NSColor {
+		let color = hsba
+		return NSColor(
+			hue: CGFloat(color.hue * (hue + 1)),
+			saturation: CGFloat(color.saturation * (saturation + 1)),
+			brightness: CGFloat(color.brightness * (brightness + 1)),
+			alpha: CGFloat(color.alpha * (alpha + 1))
+		)
+	}
 }
 
 
@@ -56,13 +87,6 @@ extension CGRect {
 				y: newValue.y - (size.height / 2)
 			)
 		}
-	}
-}
-
-
-extension NSColor {
-	func with(alpha: Double) -> NSColor {
-		return withAlphaComponent(CGFloat(alpha))
 	}
 }
 
@@ -101,6 +125,7 @@ extension CALayer {
 		DispatchQueue.main.asyncAfter(duration: delay) {
 			CATransaction.begin()
 			CATransaction.setAnimationDuration(duration)
+			CATransaction.setAnimationTimingFunction(timingFunction)
 
 			if let completion = completion {
 				CATransaction.setCompletionBlock(completion)
@@ -163,13 +188,13 @@ extension NSFont {
 
 
 extension NSBezierPath {
-	static func circle(radius: Double, center: CGPoint) -> NSBezierPath {
+	static func circle(radius: Double, center: CGPoint, startAngle: Double = 0, endAngle: Double = 360) -> NSBezierPath {
 		let path = NSBezierPath()
 		path.appendArc(
 			withCenter: center,
 			radius: CGFloat(radius),
-			startAngle: 0,
-			endAngle: 360
+			startAngle: CGFloat(startAngle),
+			endAngle: CGFloat(endAngle)
 		)
 		return path
 	}
@@ -254,6 +279,21 @@ final class ProgressCircleShapeLayer: CAShapeLayer {
 	}
 }
 
+/**
+Shows the indeterminate state, when it's activated.
+
+It draws part of a circle that gets animated into a looping motion around its core.
+*/
+final class IndeterminateShapeLayer: CAShapeLayer {
+	convenience init(radius: Double, center: CGPoint) {
+		self.init()
+		fillColor = nil
+		path = NSBezierPath.circle(radius: radius, center: bounds.center, startAngle: 270).cgPath
+		anchorPoint = CGPoint(x: 0.5, y: 0.5)
+		position = center
+	}
+}
+
 
 extension NSBezierPath {
 	/// UIKit polyfill
@@ -281,5 +321,97 @@ extension NSBezierPath {
 	/// UIKit polyfill
 	convenience init(roundedRect rect: CGRect, cornerRadius: CGFloat) {
 		self.init(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius)
+	}
+}
+
+final class AssociatedObject<T: Any> {
+	subscript(index: Any) -> T? {
+		get {
+			return objc_getAssociatedObject(index, Unmanaged.passUnretained(self).toOpaque()) as! T?
+		} set {
+			objc_setAssociatedObject(index, Unmanaged.passUnretained(self).toOpaque(), newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+		}
+	}
+}
+
+extension NSControl {
+	typealias ActionClosure = ((NSControl) -> Void)
+
+	private struct AssociatedKeys {
+		static let onActionClosure = AssociatedObject<ActionClosure>()
+	}
+
+	@objc
+	private func callClosure(_ sender: NSControl) {
+		onAction?(sender)
+	}
+
+	/**
+	Closure version of `.action`
+
+	```
+	let button = NSButton(title: "Unicorn", target: nil, action: nil)
+
+	button.onAction = { sender in
+		print("Button action: \(sender)")
+	}
+	```
+	*/
+	var onAction: ActionClosure? {
+		get {
+			return AssociatedKeys.onActionClosure[self]
+		}
+		set {
+			AssociatedKeys.onActionClosure[self] = newValue
+			action = #selector(callClosure)
+			target = self
+		}
+	}
+}
+
+extension NSView {
+	static func animate(
+		duration: TimeInterval = 1,
+		delay: TimeInterval = 0,
+		timingFunction: CAMediaTimingFunction = .default,
+		animations: @escaping (() -> Void),
+		completion: (() -> Void)? = nil
+	) {
+		DispatchQueue.main.asyncAfter(duration: delay) {
+			NSAnimationContext.runAnimationGroup({ context in
+				context.allowsImplicitAnimation = true
+				context.duration = duration
+				context.timingFunction = timingFunction
+				animations()
+			}, completionHandler: completion)
+		}
+	}
+
+	func fadeIn(duration: TimeInterval = 1, delay: TimeInterval = 0, completion: (() -> Void)? = nil) {
+		isHidden = true
+
+		NSView.animate(
+			duration: duration,
+			delay: delay,
+			animations: {
+				self.isHidden = false
+			},
+			completion: completion
+		)
+	}
+}
+
+extension CABasicAnimation {
+	/// Rotates the element around its center point infinitely.
+	static var rotate: CABasicAnimation {
+		let animation = CABasicAnimation(keyPath: #keyPath(CAShapeLayer.transform))
+		animation.valueFunction = CAValueFunction(name: .rotateZ)
+		animation.fromValue = 0
+		animation.toValue = -(Double.pi * 2)
+		animation.duration = 1
+		animation.repeatCount = .infinity
+		animation.timingFunction = CAMediaTimingFunction(name: .linear)
+
+		return animation
 	}
 }

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B5344AB721F8B27100C12ADB /* CustomButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5344AB621F8B27100C12ADB /* CustomButton.swift */; };
 		E327393D2177359E00FFE124 /* util.swift in Sources */ = {isa = PBXBuildFile; fileRef = E327393C2177359E00FFE124 /* util.swift */; };
 		E3FB30C420EA5DBC009BA1BD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FB30C320EA5DBC009BA1BD /* AppDelegate.swift */; };
 		E3FB30C920EA5DBE009BA1BD /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = E3FB30C720EA5DBE009BA1BD /* MainMenu.xib */; };
@@ -42,6 +43,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		B5344AB621F8B27100C12ADB /* CustomButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = CustomButton.swift; sourceTree = "<group>"; usesTabs = 1; };
 		"CircularProgress::CircularProgress::Product" /* CircularProgress.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = CircularProgress.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E327393C2177359E00FFE124 /* util.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = util.swift; sourceTree = "<group>"; usesTabs = 1; };
 		E3FB30C120EA5DBC009BA1BD /* CircularProgressExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CircularProgressExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -115,6 +117,7 @@
 			isa = PBXGroup;
 			children = (
 				OBJ_9 /* CircularProgress.swift */,
+				B5344AB621F8B27100C12ADB /* CustomButton.swift */,
 				OBJ_10 /* util.swift */,
 			);
 			name = CircularProgress;
@@ -128,6 +131,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = OBJ_15 /* Build configuration list for PBXNativeTarget "CircularProgress" */;
 			buildPhases = (
+				E3BFC67721FBBB2700C16B1A /* SwiftLint */,
 				OBJ_18 /* Sources */,
 				OBJ_21 /* Frameworks */,
 			);
@@ -221,6 +225,28 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		E3BFC67721FBBB2700C16B1A /* SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = SwiftLint;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which swiftlint >/dev/null; then\n    swiftlint\nelse\n    echo \"warning: SwiftLint not installed\"\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		E3FB30BD20EA5DBC009BA1BD /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -237,6 +263,7 @@
 			files = (
 				OBJ_19 /* CircularProgress.swift in Sources */,
 				OBJ_20 /* util.swift in Sources */,
+				B5344AB721F8B27100C12ADB /* CustomButton.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -361,10 +388,6 @@
 				);
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = CircularProgress.xcodeproj/CircularProgress_Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(TOOLCHAIN_DIR)/usr/lib/swift/macosx",
-				);
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
@@ -389,10 +412,6 @@
 				);
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = CircularProgress.xcodeproj/CircularProgress_Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(TOOLCHAIN_DIR)/usr/lib/swift/macosx",
-				);
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
